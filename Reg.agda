@@ -1,4 +1,4 @@
-open import Lang
+open import FinSet
 
 open import Data.Bool.Base using
   (Bool; true; false; _∧_; _∨_)
@@ -15,7 +15,7 @@ open import Relation.Nullary.Decidable using
 open import Data.Unit using
   (⊤; tt)
 
-open FinSet
+open FinSet.FinSet
 
 -- Deterministic Finite Automata
 record DFA (Σ : FinSet) : Set₁ where
@@ -26,12 +26,12 @@ record DFA (Σ : FinSet) : Set₁ where
     ∈F : type Q → Bool
     δ : type Q → type Σ → type Q
 
-compute-dfa' : ∀ {Σ} → (d : DFA Σ) → Σ * → type (DFA.Q d) → Bool
-compute-dfa' d [] q = DFA.∈F d q
-compute-dfa' d (x ∷ xs) q = compute-dfa' d xs (DFA.δ d q x)
-
 compute-dfa : ∀ {Σ} → (d : DFA Σ) → Σ * → Bool
-compute-dfa d w = compute-dfa' d w (DFA.q₀ d)
+compute-dfa d w = compute-dfa-inner d w (DFA.q₀ d)
+  where
+  compute-dfa-inner : ∀ {Σ} → (d : DFA Σ) → Σ * → type (DFA.Q d) → Bool
+  compute-dfa-inner d [] q = DFA.∈F d q
+  compute-dfa-inner d (x ∷ xs) q = compute-dfa-inner d xs (DFA.δ d q x)
 
 -- Nondeterministic Finite Automata
 data Epsilon : Set where
@@ -45,16 +45,16 @@ record NFA (Σ : FinSet) : Set₁ where
     ∈F : type Q → Bool
     δ : type Q → type Σ ⊎ Epsilon → List (type Q)
 
-compute-nfa' : ∀ {Σ} → (n : NFA Σ) → Σ * → List (type (NFA.Q n)) → Bool
-compute-nfa' n [] = foldr (_∨_) false ∘ map (NFA.∈F n)
-compute-nfa' n (w ∷ ws) qs =
-  let next  = map (flip (NFA.δ n) $ (inj₁ w)) qs in
-  let empty = map (flip (NFA.δ n) $ (inj₂ epsilon)) qs in
-  let all   = concat (next ++ empty) in
-  compute-nfa' n ws all
-
 compute-nfa : ∀ {Σ} → (n : NFA Σ) → Σ * → Bool
-compute-nfa n x = compute-nfa' n x $ NFA.δ n (NFA.q₀ n) (inj₂ epsilon)
+compute-nfa n x = compute-nfa-inner n x $ NFA.δ n (NFA.q₀ n) (inj₂ epsilon)
+  where
+  compute-nfa-inner : ∀ {Σ} → (n : NFA Σ) → Σ * → List (type (NFA.Q n)) → Bool
+  compute-nfa-inner n [] = foldr (_∨_) false ∘ map (NFA.∈F n)
+  compute-nfa-inner n (w ∷ ws) qs =
+    let next  = map (flip (NFA.δ n) $ (inj₁ w)) qs in
+    let empty = map (flip (NFA.δ n) $ (inj₂ epsilon)) qs in
+    let all   = concat (next ++ empty) in
+    compute-nfa-inner n ws all
 
 -- All DFAs are NFAs
 dfa-to-nfa : ∀ {Σ} → DFA Σ → NFA Σ
@@ -71,7 +71,7 @@ DFA.q₀ (nfa-to-dfa n) = {!!}
 DFA.∈F (nfa-to-dfa n) = {!!}
 DFA.δ (nfa-to-dfa n) = {!!}
 
--- Regular Expressions
+-- Regular expression atoms
 emptyᵣ : ∀ {Σ} → NFA Σ
 NFA.Q emptyᵣ = Σ-unit
 NFA.q₀ emptyᵣ = tt
@@ -95,9 +95,15 @@ NFA.δ (singletonᵣ {Σ} x) false (inj₁ w) with Σ≟ Σ w x
 ... | no proof = []
 ... | yes proof = true ∷ []
 
-*ᵣ : ∀ {Σ} → NFA Σ → NFA Σ
-NFA.Q  (*ᵣ NFA[ Q , q₀ , ∈F , δ ]) = Q
-NFA.q₀ (*ᵣ NFA[ Q , q₀ , ∈F , δ ]) = q₀
-NFA.∈F (*ᵣ NFA[ Q , q₀ , ∈F , δ ]) x = ?
-NFA.δ  (*ᵣ NFA[ Q , q₀ , ∈F , δ ]) = {!!}
+-- Regular operations
+-- Kleene star
+_*ᵣ : ∀ {Σ} → NFA Σ → NFA Σ
+_*ᵣ = {!!}
 
+-- Union
+_∪ᵣ_ : ∀ {Σ} → NFA Σ → NFA Σ → NFA Σ
+_∪ᵣ_ = {!!}
+
+-- Concatenation
+_∘ᵣ_ : ∀ {Σ} → NFA Σ → NFA Σ → NFA Σ
+_∘ᵣ_ = {!!}
