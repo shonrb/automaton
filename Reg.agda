@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import FinSet
 
 open import Data.Bool.Base using
@@ -13,7 +15,8 @@ open import Function.Base using
 open import Relation.Nullary.Decidable using
   (Dec; yes; no; _because_)
 open import Data.Unit using
-  (⊤; tt)
+  (⊤; tt) 
+
 
 open FinSet.FinSet
 
@@ -27,8 +30,7 @@ record DFA (Σ : FinSet) : Set₁ where
     δ : type Q → type Σ → type Q
 
 compute-dfa : ∀ {Σ} → (d : DFA Σ) → Σ * → Bool
-compute-dfa d w = compute-dfa-inner d w (DFA.q₀ d)
-  where
+compute-dfa d w = compute-dfa-inner d w (DFA.q₀ d) where
   compute-dfa-inner : ∀ {Σ} → (d : DFA Σ) → Σ * → type (DFA.Q d) → Bool
   compute-dfa-inner d [] q = DFA.∈F d q
   compute-dfa-inner d (x ∷ xs) q = compute-dfa-inner d xs (DFA.δ d q x)
@@ -46,8 +48,7 @@ record NFA (Σ : FinSet) : Set₁ where
     δ : type Q → type Σ ⊎ Epsilon → List (type Q)
 
 compute-nfa : ∀ {Σ} → (n : NFA Σ) → Σ * → Bool
-compute-nfa n x = compute-nfa-inner n x $ NFA.δ n (NFA.q₀ n) (inj₂ epsilon)
-  where
+compute-nfa n x = compute-nfa-inner n x $ NFA.δ n (NFA.q₀ n) (inj₂ epsilon) where
   compute-nfa-inner : ∀ {Σ} → (n : NFA Σ) → Σ * → List (type (NFA.Q n)) → Bool
   compute-nfa-inner n [] = foldr (_∨_) false ∘ map (NFA.∈F n)
   compute-nfa-inner n (w ∷ ws) qs =
